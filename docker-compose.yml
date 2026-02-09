@@ -5,8 +5,23 @@ services:
       context: ./ai-voice-agent-backend
       dockerfile: Dockerfile
     container_name: voice-agent-backend
-    env_file:
-      - ./ai-voice-agent-backend/.env
+    environment:
+      # LiveKit
+      - LIVEKIT_URL=${LIVEKIT_URL}
+      - LIVEKIT_API_KEY=${LIVEKIT_API_KEY}
+      - LIVEKIT_API_SECRET=${LIVEKIT_API_SECRET}
+      # LLM
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      # Speech
+      - DEEPGRAM_API_KEY=${DEEPGRAM_API_KEY}
+      - CARTESIA_API_KEY=${CARTESIA_API_KEY}
+      # Avatar
+      - TAVUS_API_KEY=${TAVUS_API_KEY}
+      - TAVUS_REPLICA_ID=${TAVUS_REPLICA_ID}
+      - TAVUS_PERSONA_ID=${TAVUS_PERSONA_ID}
+      # Database
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_KEY=${SUPABASE_KEY}
     restart: unless-stopped
     networks:
       - voice-agent-net
@@ -21,8 +36,10 @@ services:
         - LIVEKIT_API_KEY=${LIVEKIT_API_KEY}
         - LIVEKIT_API_SECRET=${LIVEKIT_API_SECRET}
     container_name: voice-agent-frontend
-    env_file:
-      - ./ai-voice-agent-frontend/.env.local
+    environment:
+      - LIVEKIT_URL=${LIVEKIT_URL}
+      - LIVEKIT_API_KEY=${LIVEKIT_API_KEY}
+      - LIVEKIT_API_SECRET=${LIVEKIT_API_SECRET}
     restart: unless-stopped
     ports:
       - "3000:3000"
@@ -39,8 +56,18 @@ services:
       dockerfile: Dockerfile
     container_name: voice-agent-tests
     command: ["python", "-m", "pytest", "-v", "--tb=short"]
-    env_file:
-      - ./ai-voice-agent-backend/.env
+    environment:
+      - LIVEKIT_URL=${LIVEKIT_URL}
+      - LIVEKIT_API_KEY=${LIVEKIT_API_KEY}
+      - LIVEKIT_API_SECRET=${LIVEKIT_API_SECRET}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - DEEPGRAM_API_KEY=${DEEPGRAM_API_KEY}
+      - CARTESIA_API_KEY=${CARTESIA_API_KEY}
+      - TAVUS_API_KEY=${TAVUS_API_KEY}
+      - TAVUS_REPLICA_ID=${TAVUS_REPLICA_ID}
+      - TAVUS_PERSONA_ID=${TAVUS_PERSONA_ID}
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_KEY=${SUPABASE_KEY}
     profiles:
       - testing
     networks:

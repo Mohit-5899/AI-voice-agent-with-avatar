@@ -122,7 +122,7 @@ Supabase (PostgreSQL)
 |   +-- package.json
 |
 +-- docker-compose.yml               # Run backend + frontend + tests
-+-- .env.example                      # Root env for docker-compose build args
++-- .env.example                      # All env vars (single file for docker-compose)
 +-- SYSTEM_DESIGN.md                  # Detailed architecture documentation
 +-- README.md
 ```
@@ -230,11 +230,9 @@ Then open [http://localhost:3000](http://localhost:3000) in your browser.
 ### Option 2: Docker Compose (Both at Once)
 
 ```bash
-# Set up env files first (if not already done)
-cp .env.example .env                              # Root (docker-compose build args)
-cp ai-voice-agent-backend/.env.example ai-voice-agent-backend/.env
-cp ai-voice-agent-frontend/.env.local.example ai-voice-agent-frontend/.env.local
-# Fill in all API keys in each file
+# Set up the single .env file (all keys in one place)
+cp .env.example .env
+# Fill in all API keys in .env
 
 # Build and run both services
 docker compose up --build
@@ -340,15 +338,11 @@ User:  "No, that's all. Thanks!"
 
 ## Environment Variables
 
-### Root (`.env`) -- docker-compose build args
+All environment variables live in a single root `.env` file. Docker Compose injects them into both backend and frontend containers automatically.
 
-```env
-LIVEKIT_URL=wss://your-project.livekit.cloud
-LIVEKIT_API_KEY=your-api-key
-LIVEKIT_API_SECRET=your-api-secret
+```bash
+cp .env.example .env   # then fill in your keys
 ```
-
-### Backend (`ai-voice-agent-backend/.env`)
 
 ```env
 # LiveKit
@@ -373,13 +367,9 @@ SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_KEY=your-anon-key
 ```
 
-### Frontend (`ai-voice-agent-frontend/.env.local`)
-
-```env
-LIVEKIT_URL=wss://your-project.livekit.cloud
-LIVEKIT_API_KEY=your-api-key
-LIVEKIT_API_SECRET=your-api-secret
-```
+For local development (without Docker), copy the service-specific example files instead:
+- Backend: `cp ai-voice-agent-backend/.env.example ai-voice-agent-backend/.env`
+- Frontend: `cp ai-voice-agent-frontend/.env.local.example ai-voice-agent-frontend/.env.local`
 
 ## License
 
