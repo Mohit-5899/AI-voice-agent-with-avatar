@@ -1,0 +1,51 @@
+services:
+  # ---- Backend: Python LiveKit Agent ----
+  backend:
+    build:
+      context: ./ai-voice-agent-backend
+      dockerfile: Dockerfile
+    container_name: voice-agent-backend
+    env_file:
+      - ./ai-voice-agent-backend/.env
+    restart: unless-stopped
+    networks:
+      - voice-agent-net
+
+  # ---- Frontend: Next.js App ----
+  frontend:
+    build:
+      context: ./ai-voice-agent-frontend
+      dockerfile: Dockerfile
+      args:
+        - LIVEKIT_URL=${LIVEKIT_URL}
+        - LIVEKIT_API_KEY=${LIVEKIT_API_KEY}
+        - LIVEKIT_API_SECRET=${LIVEKIT_API_SECRET}
+    container_name: voice-agent-frontend
+    env_file:
+      - ./ai-voice-agent-frontend/.env.local
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - voice-agent-net
+
+  # ---- Run Tests (one-off) ----
+  # Usage: docker compose --profile testing run --rm tests
+  tests:
+    build:
+      context: ./ai-voice-agent-backend
+      dockerfile: Dockerfile
+    container_name: voice-agent-tests
+    command: ["python", "-m", "pytest", "-v", "--tb=short"]
+    env_file:
+      - ./ai-voice-agent-backend/.env
+    profiles:
+      - testing
+    networks:
+      - voice-agent-net
+
+networks:
+  voice-agent-net:
+    driver: bridge
