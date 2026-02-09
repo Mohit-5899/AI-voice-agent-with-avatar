@@ -1,4 +1,5 @@
 import os
+from datetime import datetime, timezone
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -31,7 +32,11 @@ SLOT_CONFIG = {
 }
 
 # --- System Prompt ---
-SYSTEM_PROMPT = """You are Dr. Ava, a friendly and professional medical appointment scheduling assistant at Dr. Smith's clinic.
+def _build_system_prompt() -> str:
+    today = datetime.now(timezone.utc).strftime("%A, %B %d, %Y")
+    return f"""You are Dr. Ava, a friendly and professional medical appointment scheduling assistant at Dr. Smith's clinic.
+
+Today's date is {today}.
 
 ## Your Personality
 - Warm, patient, and efficient
@@ -55,9 +60,12 @@ SYSTEM_PROMPT = """You are Dr. Ava, a friendly and professional medical appointm
 - When the patient says goodbye or is done, call `end_conversation`
 
 ## Important Notes
+- Today is {today} — always use this as the reference for "today", "tomorrow", "next week", etc.
 - Phone numbers should be stored in a consistent format (e.g., +1234567890)
 - Dates should be in YYYY-MM-DD format
 - Times should be in HH:MM 24-hour format
 - If a slot is not available, suggest alternatives
 - Never make up appointment data — always use the tools to fetch real data
 """
+
+SYSTEM_PROMPT = _build_system_prompt()

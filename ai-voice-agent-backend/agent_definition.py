@@ -9,6 +9,11 @@ from config import SYSTEM_PROMPT, TOOL_CALL_TOPIC, CALL_SUMMARY_TOPIC
 logger = logging.getLogger("appointment-agent")
 
 
+def _get_room(context: RunContext):
+    """Get the LiveKit Room from the RunContext via session.room_io."""
+    return context.session.room_io.room
+
+
 class AppointmentAgent(Agent):
     def __init__(self) -> None:
         super().__init__(instructions=SYSTEM_PROMPT)
@@ -20,7 +25,7 @@ class AppointmentAgent(Agent):
     async def _publish_tool_event(self, context: RunContext, event: ToolCallEvent):
         """Publish a tool call event to the frontend via data channel."""
         try:
-            room = context.session.room
+            room = _get_room(context)
             if room and room.local_participant:
                 await room.local_participant.publish_data(
                     payload=event.model_dump_json().encode("utf-8"),
@@ -192,7 +197,7 @@ class AppointmentAgent(Agent):
 
         # Publish summary on dedicated topic for frontend summary display
         try:
-            room = context.session.room
+            room = _get_room(context)
             if room and room.local_participant:
                 await room.local_participant.publish_data(
                     payload=json.dumps({"summary": summary}).encode("utf-8"),

@@ -8,6 +8,15 @@ from unittest.mock import patch, AsyncMock, MagicMock
 from agent_definition import AppointmentAgent
 
 
+def _make_mock_ctx():
+    """Create a mock RunContext with session.room_io.room."""
+    ctx = MagicMock()
+    ctx.session.room_io.room = MagicMock()
+    ctx.session.room_io.room.local_participant = MagicMock()
+    ctx.session.room_io.room.local_participant.publish_data = AsyncMock()
+    return ctx
+
+
 class TestAppointmentAgentTools:
     """Test that each tool calls the right function, publishes events, and returns JSON."""
 
@@ -17,12 +26,7 @@ class TestAppointmentAgentTools:
 
     @pytest.fixture
     def mock_ctx(self):
-        ctx = MagicMock()
-        ctx.session = MagicMock()
-        ctx.session.room = MagicMock()
-        ctx.session.room.local_participant = MagicMock()
-        ctx.session.room.local_participant.publish_data = AsyncMock()
-        return ctx
+        return _make_mock_ctx()
 
     # ---- identify_user ----
 
@@ -40,7 +44,7 @@ class TestAppointmentAgentTools:
         assert parsed["found"] is True
         assert parsed["name"] == "John"
         # Verify data channel events published (started + completed)
-        assert mock_ctx.session.room.local_participant.publish_data.call_count == 2
+        assert mock_ctx.session.room_io.room.local_participant.publish_data.call_count == 2
 
     # ---- fetch_slots ----
 
@@ -178,7 +182,7 @@ class TestAppointmentAgentTools:
         assert parsed["summary"] == "Booked appointment for Feb 10"
         assert parsed["message"] == "Conversation ended"
         # Should publish: tool_call started, call_summary, tool_call completed = 3 publish_data calls
-        assert mock_ctx.session.room.local_participant.publish_data.call_count == 3
+        assert mock_ctx.session.room_io.room.local_participant.publish_data.call_count == 3
 
 
 class TestPublishToolEvent:
@@ -187,14 +191,13 @@ class TestPublishToolEvent:
     @pytest.mark.asyncio
     async def test_publishes_json_bytes(self):
         agent = AppointmentAgent()
-        ctx = MagicMock()
-        ctx.session.room.local_participant.publish_data = AsyncMock()
+        ctx = _make_mock_ctx()
 
         from models import ToolCallEvent
         event = ToolCallEvent.now("test_tool", "started", {"key": "value"})
         await agent._publish_tool_event(ctx, event)
 
-        call_args = ctx.session.room.local_participant.publish_data.call_args
+        call_args = ctx.session.room_io.room.local_participant.publish_data.call_args
         payload = call_args.kwargs.get("payload") or call_args[1].get("payload") or call_args[0][0]
         assert isinstance(payload, bytes)
         parsed = json.loads(payload.decode("utf-8"))
@@ -205,7 +208,7 @@ class TestPublishToolEvent:
         """Should not crash when room is None."""
         agent = AppointmentAgent()
         ctx = MagicMock()
-        ctx.session.room = None
+        ctx.session.room_io.room = None
 
         from models import ToolCallEvent
         event = ToolCallEvent.now("test", "started", {})
@@ -216,8 +219,8 @@ class TestPublishToolEvent:
     async def test_handles_publish_error_gracefully(self):
         """Should log warning but not crash on publish error."""
         agent = AppointmentAgent()
-        ctx = MagicMock()
-        ctx.session.room.local_participant.publish_data = AsyncMock(side_effect=Exception("Network error"))
+        ctx = _make_mock_ctx()
+        ctx.session.room_io.room.local_participant.publish_data = AsyncMock(side_effect=Exception("Network error"))
 
         from models import ToolCallEvent
         event = ToolCallEvent.now("test", "started", {})

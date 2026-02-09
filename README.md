@@ -195,12 +195,7 @@ cp .env.example .env
 
 # Install dependencies with uv
 uv sync --all-extras
-
-# Run the agent in dev mode
-uv run python agent.py dev
 ```
-
-The agent will connect to LiveKit Cloud and wait for room connections.
 
 ### 5. Set Up the Frontend
 
@@ -212,17 +207,30 @@ cp .env.local.example .env.local
 
 # Install dependencies
 npm install
+```
 
-# Run the dev server
+## How to Run
+
+### Option 1: Run Separately (Recommended for Development)
+
+**Terminal 1 -- Backend:**
+```bash
+cd ai-voice-agent-backend
+uv run python agent.py dev
+```
+
+**Terminal 2 -- Frontend:**
+```bash
+cd ai-voice-agent-frontend
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+Then open [http://localhost:3000](http://localhost:3000) in your browser.
 
-### 6. Docker Compose (Run Everything)
+### Option 2: Docker Compose (Both at Once)
 
 ```bash
-# Set up env files
+# Set up env files first (if not already done)
 cp .env.example .env                              # Root (docker-compose build args)
 cp ai-voice-agent-backend/.env.example ai-voice-agent-backend/.env
 cp ai-voice-agent-frontend/.env.local.example ai-voice-agent-frontend/.env.local
@@ -230,12 +238,27 @@ cp ai-voice-agent-frontend/.env.local.example ai-voice-agent-frontend/.env.local
 
 # Build and run both services
 docker compose up --build
+```
 
+Then open [http://localhost:3000](http://localhost:3000) in your browser.
+
+```bash
 # Run in background
 docker compose up --build -d
 
 # Stop everything
 docker compose down
+```
+
+### Option 3: Run Tests Only
+
+```bash
+# Via uv (local)
+cd ai-voice-agent-backend
+uv run pytest -v
+
+# Via Docker
+docker compose --profile testing run --rm tests
 ```
 
 | Service | URL | Description |
